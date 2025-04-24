@@ -1,8 +1,9 @@
 from transformers import TrainingArguments
 from trl import SFTTrainer
 from params import DataArguments, ModelArguments
-from template.load_template import get_template
-from load_dataset import load_single_dataset
+from data.load_template import get_template
+from data.load_dataset import load_single_dataset
+from data.preprocess import get_preprocessed_dataset
 from model.load_model import load_tokenizer, load_model
 from llamafactory_refs.parser import DatasetAttr
 
@@ -67,5 +68,8 @@ def main():
     # Load template
     template = get_template(tokenizer, data_args)
 
-    # Load train dataset
+    # Load and preprocess dataset
     dataset = load_single_dataset(dataset_attr, data_args, training_args)
+    dataset = get_preprocessed_dataset(
+        dataset, data_args, training_args, template, tokenizer, processor, is_eval=False,
+    )

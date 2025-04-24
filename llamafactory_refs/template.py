@@ -13,7 +13,7 @@ if TYPE_CHECKING:
     from transformers import PreTrainedTokenizer
 
     from params import DataArguments
-    from .formatter import SLOTS, Formatter
+    from llamafactory_refs.formatter import SLOTS, Formatter
     from llamafactory_refs.mm_plugin import BasePlugin
 
 
