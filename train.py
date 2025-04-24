@@ -61,15 +61,15 @@ def main():
         eval_steps=2,
     )
 
-    # Load model and tokenizer
     tokenizer, processor = load_tokenizer(model_args)
-    model = load_model(model_args)
+    model = load_model(model_args, training_args.do_train)
 
-    # Load template
     template = get_template(tokenizer, data_args)
 
-    # Load and preprocess dataset
-    dataset = load_single_dataset(dataset_attr, data_args, training_args)
-    dataset = get_preprocessed_dataset(
-        dataset, data_args, training_args, template, tokenizer, processor, is_eval=False,
-    )
+    with training_args.main_process_first(desc="load dataset"):
+        dataset = load_single_dataset(dataset_attr, data_args, training_args)
+
+    with training_args.main_process_first(desc="pre-process dataset"):
+        dataset = get_preprocessed_dataset(
+            dataset, data_args, training_args, template, tokenizer, processor, is_eval=False,
+        )

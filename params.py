@@ -31,3 +31,4 @@ class ModelArguments:
     video_resolution: int = 128
     video_fps: float = 2.0
     video_maxlen: int = 64
+    gradient_checkpointing: bool = True
