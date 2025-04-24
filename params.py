@@ -32,3 +32,11 @@ class ModelArguments:
     video_fps: float = 2.0
     video_maxlen: int = 64
     gradient_checkpointing: bool = True
+
+
+# Ref: src/llamafactory/hparams/finetuning_args.py
+@dataclass
+class FinetuningArguments:
+    pure_bf16: bool = False
+    stage: str
+    finetuning_type: str
