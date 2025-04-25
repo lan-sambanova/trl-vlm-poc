@@ -1,10 +1,10 @@
 from transformers import TrainingArguments
 from trl import SFTTrainer
 from params import DataArguments, ModelArguments
-from data.load_template import get_template
-from data.load_dataset import load_single_dataset
+from data.template import get_template
+from data.loader import load_single_dataset
 from data.preprocess import get_preprocessed_dataset
-from model.load_model import load_tokenizer, load_model
+from model.loader import load_tokenizer, load_model
 from llamafactory_refs.parser import DatasetAttr
 
 
