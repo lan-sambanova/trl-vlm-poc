@@ -7,6 +7,7 @@ from data.preprocess import get_preprocessed_dataset
 from data.collator import SFTDataCollatorWith4DAttentionMask
 from model.loader import load_tokenizer, load_model
 from llamafactory_refs.parser import DatasetAttr
+from llamafactory_refs.processors import IGNORE_INDEX
 
 
 OUTPUT_DIR = "/import/ml-sc-scratch6/lang/llama_3.2_checkpoints_gpu"
@@ -80,14 +81,31 @@ def main():
         )
 
     data_collator = SFTDataCollatorWith4DAttentionMask(
+        # [LlamaFactory] args of MultiModalDataCollatorForSeq2Seq
         template=template,
-        pad_to_multiple_of=8 if training_args.do_train else None,  # for shift short attention
-        label_pad_token_id=IGNORE_INDEX if data_args.ignore_pad_token_for_loss else tokenizer.pad_token_id,
-        block_diag_attn=model_args.block_diag_attn,
+        processor=processor,
+        # [LlamaFactory] args for bock diag attn mask
+        block_diag_attn=model_args.block_diag_attn,  # Expands attn mask for packed sequences, required by NXE, see article_attention
         attn_implementation=getattr(model.config, "_attn_implementation", None),
         compute_dtype=model_args.compute_dtype,
-        **tokenizer_module,
+        # [HF] args of DataCollatorForSeq2Seq (base class of LlamaFactory collabors)
+        tokenizer=tokenizer,  # dummy input, not used by LlamaFactory
+        pad_to_multiple_of=8 if training_args.do_train else None,  # for shift short attention
+        label_pad_token_id=IGNORE_INDEX,  # [LlamaFactory] Configurable by data_args.ignore_pad_token_for_loss
     )
 
-    # trainer =  SFTTrainer(
-    #     model=model,
+    # [LlamaFactory] Ignored custom optimizer, scheduler, prediction_step. Ignored `save_predictions` method.
+    trainer = SFTTrainer(
+        model=model,
+        args=training_args,
+        data_collator=data_collator,
+        train_dataset=dataset,
+        eval_dataset=None, # TODO: add eval, metrics
+        processing_class=processor,
+    )
+
+    if training_args.do_train:
+        train_result = trainer.train()
+        trainer.save_model(training_args.output_dir)
+        trainer.log_metrics("train", train_result.metrics)
+        trainer.save_metrics("train", train_result.metrics)
