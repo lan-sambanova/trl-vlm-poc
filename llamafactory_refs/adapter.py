@@ -144,6 +144,7 @@ def _setup_freeze_tuning(
 # [LlamaFactory] Removed lora
 
 
+# TODO: Enable deepspeed
 def init_adapter(
     config: "PretrainedConfig",
     model: "PreTrainedModel",
@@ -162,8 +163,7 @@ def init_adapter(
         if finetuning_args.finetuning_type != "lora":
             raise ValueError("Quantized models can only be used for the LoRA tuning.")
 
-        if finetuning_args.pissa_init:
-            raise ValueError("Cannot initialize PiSSA adapter on quantized models.")
+        # [LlamaFactory] Removed PiSSA check as it is currently not supported.
 
     # cast trainable parameters to float32 if:
     # 1. is_trainable and not pure_bf16 and not badam and quantization_bit is not None (qlora)

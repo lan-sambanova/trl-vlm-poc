@@ -1,9 +1,10 @@
 from transformers import TrainingArguments
 from trl import SFTTrainer
-from params import DataArguments, ModelArguments
+from params import DataArguments, ModelArguments, FinetuningArguments
 from data.template import get_template
 from data.loader import load_single_dataset
 from data.preprocess import get_preprocessed_dataset
+from data.collator import SFTDataCollatorWith4DAttentionMask
 from model.loader import load_tokenizer, load_model
 from llamafactory_refs.parser import DatasetAttr
 
@@ -60,9 +61,13 @@ def main():
         eval_strategy="steps",
         eval_steps=2,
     )
+    finetuning_args = FinetuningArguments(
+        stage="sft",
+        finetuning_type="freeze",
+    )
 
     tokenizer, processor = load_tokenizer(model_args)
-    model = load_model(model_args, training_args.do_train)
+    model = load_model(model_args, finetuning_args, training_args.do_train)
 
     template = get_template(tokenizer, data_args)
 
@@ -73,3 +78,16 @@ def main():
         dataset = get_preprocessed_dataset(
             dataset, data_args, training_args, template, tokenizer, processor, is_eval=False,
         )
+
+    data_collator = SFTDataCollatorWith4DAttentionMask(
+        template=template,
+        pad_to_multiple_of=8 if training_args.do_train else None,  # for shift short attention
+        label_pad_token_id=IGNORE_INDEX if data_args.ignore_pad_token_for_loss else tokenizer.pad_token_id,
+        block_diag_attn=model_args.block_diag_attn,
+        attn_implementation=getattr(model.config, "_attn_implementation", None),
+        compute_dtype=model_args.compute_dtype,
+        **tokenizer_module,
+    )
+
+    # trainer =  SFTTrainer(
+    #     model=model,

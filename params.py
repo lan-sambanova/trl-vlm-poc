@@ -37,6 +37,6 @@ class ModelArguments:
 # Ref: src/llamafactory/hparams/finetuning_args.py
 @dataclass
 class FinetuningArguments:
-    pure_bf16: bool = False
     stage: str
     finetuning_type: str
+    pure_bf16: bool = False
