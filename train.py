@@ -59,7 +59,7 @@ def main():
         bf16=True,
         ddp_timeout=180000000,
         save_total_limit=10,
-        output_dir="/import/ml-sc-scratch6/lang/llama_3.2_checkpoints_gpu",
+        output_dir="/import/ml-sc-scratch6/lang/llama_3.2_checkpoints_gpu_trl",
         # eval
         # per_device_eval_batch_size=1,
         # eval_strategy="steps",

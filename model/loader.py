@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-import logging
 
 from transformers import AutoConfig, AutoTokenizer, AutoProcessor, AutoModelForVision2Seq
 
@@ -7,9 +6,6 @@ from params import ModelArguments, FinetuningArguments
 
 from llamafactory_refs.model_utils import count_parameters, _set_extra_attr, _get_init_kwargs, apply_custom_checkpointing
 from llamafactory_refs.adapter import init_adapter
-
-
-logger = logging.getLogger(__name__)
 
 
 def load_config(args: ModelArguments):
@@ -60,6 +56,6 @@ def load_model(model_args: ModelArguments, finetuning_args: FinetuningArguments,
     else:
         param_stats = "all params: {:,}".format(all_param)
 
-    logger.info(param_stats)
+    print(param_stats)
 
     return model
