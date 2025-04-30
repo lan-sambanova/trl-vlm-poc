@@ -50,6 +50,7 @@ class FinetuningArguments:
     freeze_extra_modules: Optional[str] = None  # Name(s) of modules apart from hidden layers to be set as trainable
     pure_bf16: bool = False
     use_badam: bool = False  # Whether or not to use the BAdam (block-diag update params) optimizer
+    plot_loss: bool = False
 
     def __post_init__(self):
         def split_arg(arg):

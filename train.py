@@ -11,10 +11,6 @@ from llamafactory_refs.parser import DatasetAttr
 from llamafactory_refs.processors import IGNORE_INDEX
 
 
-OUTPUT_DIR = "/import/ml-sc-scratch6/lang/llama_3.2_checkpoints_gpu"
-PER_DEVICE_BATCH_SUZE = 2
-NUM_EPOCHS = 1
-
 def main():
     # Config
     dataset_attr = DatasetAttr(
@@ -37,10 +33,10 @@ def main():
     data_args = DataArguments(
         template="llama3_vl",
         dataset="llava-med-train",
-        cutoff_len=64,
+        cutoff_len=1024,
         overwrite_cache=True,
         preprocessing_num_workers=4,
-        max_samples = 8,
+        # max_samples = 8,
     )
     model_args = ModelArguments(
         model_name_or_path="/import/ml-sc-scratch3/shubhangiu/llama_3.2_checkpoints/saves/llama-3.2-11b_llava_med_pretraining/full/sft/checkpoint-3651",
@@ -50,9 +46,9 @@ def main():
         # train
         do_train=True,
         per_device_train_batch_size=2,
-        gradient_accumulation_steps=1,
+        gradient_accumulation_steps=16,
         learning_rate=1.0e-6,
-        num_train_epochs=1,
+        num_train_epochs=3,
         lr_scheduler_type="cosine",
         warmup_ratio=0.03,
         weight_decay=0.0,
@@ -60,6 +56,9 @@ def main():
         ddp_timeout=180000000,
         save_total_limit=10,
         output_dir="/import/ml-sc-scratch6/lang/llama_3.2_checkpoints_gpu_trl",
+        logging_steps = 1,
+        save_steps = 396,
+        overwrite_output_dir = True,
         # eval
         # per_device_eval_batch_size=1,
         # eval_strategy="steps",
@@ -68,6 +67,7 @@ def main():
     finetuning_args = FinetuningArguments(
         stage="sft",
         finetuning_type="freeze",
+        plot_loss=True,
     )
 
     tokenizer, processor = load_tokenizer(model_args)
