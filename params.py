@@ -1,5 +1,7 @@
 from dataclasses import dataclass
-from typing import Optional
+from typing import List, Optional
+
+import torch
 
 
 # Ref: src/llamafactory/hparams/data_args.py
@@ -40,4 +42,26 @@ class ModelArguments:
 class FinetuningArguments:
     stage: str
     finetuning_type: str
+    freeze_vision_tower: bool = True  # Whether or not to freeze vision tower in MLLM training
+    train_mm_proj_only: bool = False  # Whether or not to train the multimodal projectos for MLLM training
+    use_llama_pro: bool = False  # Whether to make only the params in the expanded blocks trainable
+    freeze_trainable_layers: int = 2  # Positive num means the last n layers are trainable
+    freeze_trainable_modules: str = "all"  # Name(s) of trainable modules for freeze fine-tuning
+    freeze_extra_modules: Optional[str] = None  # Name(s) of modules apart from hidden layers to be set as trainable
     pure_bf16: bool = False
+    use_badam: bool = False  # Whether or not to use the BAdam (block-diag update params) optimizer
+
+    def __post_init__(self):
+        def split_arg(arg):
+            if isinstance(arg, str):
+                return [item.strip() for item in arg.split(",")]
+            return arg
+
+        self.freeze_trainable_modules: List[str] = split_arg(self.freeze_trainable_modules)
+        self.freeze_extra_modules: Optional[List[str]] = split_arg(self.freeze_extra_modules)
+        self.freeze_vision_tower = self.freeze_vision_tower or self.train_mm_proj_only
+
+        assert self.finetuning_type in ["lora", "freeze", "full"], "Invalid fine-tuning method."
+
+        if self.train_mm_proj_only and self.finetuning_type != "full":
+            raise ValueError("`train_mm_proj_only` is only valid for full training.")

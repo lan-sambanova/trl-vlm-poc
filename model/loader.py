@@ -5,11 +5,11 @@ from transformers import AutoConfig, AutoTokenizer, AutoProcessor, AutoModelForV
 
 from params import ModelArguments, FinetuningArguments
 
-from llamafactory_refs.model_utils import count_parameters, _set_extra_attr, _get_init_kwargs
+from llamafactory_refs.model_utils import count_parameters, _set_extra_attr, _get_init_kwargs, apply_custom_checkpointing
 from llamafactory_refs.adapter import init_adapter
 
 
-logger =logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 def load_config(args: ModelArguments):
@@ -41,13 +41,8 @@ def load_model(model_args: ModelArguments, finetuning_args: FinetuningArguments,
     init_kwargs["pretrained_model_name_or_path"] = model_args.model_name_or_path
     model = AutoModelForVision2Seq.from_pretrained(**init_kwargs)
 
-    # prepare model for training
     if model_args.gradient_checkpointing:
-        # [LlamaFactory] Ignored custom gradient checkpointing that applies GC only to trainable layers
-        # Ref: get_custom_gradient_checkpointing_func() in src/llamafactory/model/model_utils/checkpointing.py
-        model.gradient_checkpointing_enable()
-        setattr(model.config, "use_cache", False)
-        logger.info("Gradient checkpointing enabled.")
+        apply_custom_checkpointing(model)
 
     model = init_adapter(config, model, model_args, finetuning_args, is_trainable)
 
@@ -66,3 +61,5 @@ def load_model(model_args: ModelArguments, finetuning_args: FinetuningArguments,
         param_stats = "all params: {:,}".format(all_param)
 
     logger.info(param_stats)
+
+    return model

@@ -1,6 +1,11 @@
 """Model utils from LlamaFactory"""
-from typing import Tuple
+from functools import partial, wraps
+from typing import Any, Dict, Callable, Tuple, Optional, Union
+from types import MethodType
+
 import torch
+from torch.utils.checkpoint import checkpoint
+from transformers import PreTrainedModel
 
 from params import ModelArguments
 
@@ -56,3 +61,38 @@ def count_parameters(model: "torch.nn.Module") -> Tuple[int, int]:
             trainable_params += num_params
 
     return trainable_params, all_param
+
+
+# Copied from: src/llamafactory/model/model_utils/checkpointing.py
+# Removed code paths for unsloth
+def get_custom_gradient_checkpointing_func(gradient_checkpointing_func):
+    """Only applies gradient checkpointing to trainable layers."""
+    # [LlamaFactory] Removed support for unsloth gradient checkpointing
+    @wraps(gradient_checkpointing_func)
+    def custom_gradient_checkpointing_func(func: Callable, *args: Union["torch.Tensor", Any], **kwargs):
+        module: "torch.nn.Module" = func.__self__
+
+        if any(param.requires_grad for param in module.parameters()):
+            for arg in args:
+                if torch.is_tensor(arg) and torch.is_floating_point(arg):
+                    arg.requires_grad_(True)
+
+        return gradient_checkpointing_func(func, *args, **kwargs)
+
+    return custom_gradient_checkpointing_func
+
+
+# Simplified from the GC part of `prepare_model_for_training`
+# src/llamafactory/model/model_utils/checkpointing.py
+def apply_custom_checkpointing(model: PreTrainedModel) -> None:
+    # Removed support for unsloth gradient checkpointing
+    def _gradient_checkpointing_enable(self: PreTrainedModel, gradient_checkpointing_kwargs: Optional[Dict[str, Any]] = None):
+        gradient_checkpointing_func = partial(checkpoint, **gradient_checkpointing_kwargs)
+        gradient_checkpointing_func = get_custom_gradient_checkpointing_func(gradient_checkpointing_func)
+        self._set_gradient_checkpointing(enable=True, gradient_checkpointing_func=gradient_checkpointing_func)
+
+    # gradient_checkpointing_enable = partial(_gradient_checkpointing_enable)
+    model.gradient_checkpointing_enable = MethodType(_gradient_checkpointing_enable, model)
+    model.gradient_checkpointing_enable(gradient_checkpointing_kwargs={"use_reentrant": True})
+    setattr(model.config, "use_cache", False)  # turn off when gradient checkpointing is enabled
+    print(f"Gradient checkpointing enabled: {model.is_gradient_checkpointing}")

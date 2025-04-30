@@ -17,18 +17,18 @@ IMAGE_PLACEHOLDER = "<image>"
 
 
 def _is_package_available(name: str) -> bool:
-	return importlib.util.find_spec(name) is not None
+    return importlib.util.find_spec(name) is not None
 
 
 # [LlamaFactory] if is_pillow_available():
 if _is_package_available("PIL"):
-	from PIL import Image
+    from PIL import Image
     from PIL.Image import Image as ImageObject
 
 
 # [LlamaFactory] if is_pyav_available():
 if _is_package_available("av"):
-	import av
+    import av
 
 
 if TYPE_CHECKING:

@@ -3,7 +3,7 @@
 import os
 import pandas as pd
 from functools import partial
-from typing import TYPE_CHECKING, Dict, List, Optional, Sequence
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Sequence
 from .data_utils import Role
 
 # [LlamaFactory] Replace custom logger with generic logger

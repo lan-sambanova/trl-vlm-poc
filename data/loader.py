@@ -14,7 +14,10 @@ def load_single_dataset(
     data_args: DataArguments,
     training_args: TrainingArguments
 ) -> Dataset:
-    dataset = load_dataset(path=dataset_attr.dataset_name, split='train', trust_remote_cache=True)
+    print(f"Loading dataset {dataset_attr}...")
+    dataset = load_dataset(
+        path=dataset_attr.dataset_name, split=dataset_attr.split, trust_remote_code=True
+    )
     if data_args.max_samples is not None:
         max_samples = min(data_args.max_samples, len(dataset))
         dataset = dataset.select(range(max_samples))

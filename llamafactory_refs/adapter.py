@@ -1,6 +1,6 @@
 # Copied from: src/llamafactory/model/adapter.py
 import re
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Set
 import logging
 
 import torch
@@ -31,12 +31,7 @@ def get_forbidden_modules(config: "PretrainedConfig", finetuning_args: "Finetuni
         if finetuning_args.train_mm_proj_only:
             forbidden_modules.add("language_model")
 
-    elif model_type == "qwen2_vl":
-        if finetuning_args.freeze_vision_tower:
-            forbidden_modules.add("visual")
-
-        if finetuning_args.train_mm_proj_only:
-            raise ValueError("Qwen2-VL models do not support `train_mm_proj_only`.")
+    # [LlamaFactory] Removed branch for qwen2_vl
 
     return forbidden_modules
 
@@ -93,7 +88,7 @@ def _setup_freeze_tuning(
 
         stride = num_layers // finetuning_args.freeze_trainable_layers
         trainable_layer_ids = range(stride - 1, num_layers + stride - 1, stride)
-    elif finetuning_args.freeze_trainable_layers > 0:  # fine-tuning the last n layers if num_layer_trainable > 0
+    if finetuning_args.freeze_trainable_layers > 0:  # fine-tuning the last n layers if num_layer_trainable > 0
         trainable_layer_ids = range(max(0, num_layers - finetuning_args.freeze_trainable_layers), num_layers)
     else:  # fine-tuning the first n layers if num_layer_trainable < 0
         trainable_layer_ids = range(min(-finetuning_args.freeze_trainable_layers, num_layers))
@@ -133,6 +128,7 @@ def _setup_freeze_tuning(
         if any(trainable_layer in name for trainable_layer in trainable_layers) and not any(
             forbidden_module in name for forbidden_module in forbidden_modules
         ):
+            print(f"Trainable layers: {name}")
             if cast_trainable_params_to_fp32:
                 param.data = param.data.to(torch.float32)
         else:
