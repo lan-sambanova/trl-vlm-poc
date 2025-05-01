@@ -1,3 +1,4 @@
+import os
 import torch
 from transformers import TrainingArguments
 from trl import SFTConfig, SFTTrainer
@@ -36,7 +37,7 @@ def main():
         cutoff_len=1024,
         overwrite_cache=True,
         preprocessing_num_workers=4,
-        # max_samples = 8,
+        max_samples = 8,
     )
     model_args = ModelArguments(
         model_name_or_path="/import/ml-sc-scratch3/shubhangiu/llama_3.2_checkpoints/saves/llama-3.2-11b_llava_med_pretraining/full/sft/checkpoint-3651",
@@ -48,7 +49,7 @@ def main():
         per_device_train_batch_size=2,
         gradient_accumulation_steps=16,
         learning_rate=1.0e-6,
-        num_train_epochs=3,
+        num_train_epochs=1,
         lr_scheduler_type="cosine",
         warmup_ratio=0.03,
         weight_decay=0.0,
@@ -70,8 +71,11 @@ def main():
         plot_loss=True,
     )
 
+    print(f"Distributed mode: {training_args.parallel_mode}")
+    print(f"Local rank: {training_args.local_rank}")
+    print(f"Distributed state: {training_args.distributed_state}")
+
     tokenizer, processor = load_tokenizer(model_args)
-    model = load_model(model_args, finetuning_args, training_args.do_train)
 
     template = get_template(tokenizer, data_args)
 
@@ -82,6 +86,8 @@ def main():
         dataset = get_preprocessed_dataset(
             dataset, data_args, training_args, template, tokenizer, processor, is_eval=False,
         )
+    with training_args.main_process_first(desc="loading model"):
+        model = load_model(model_args, finetuning_args, training_args.do_train)
 
     data_collator = SFTDataCollatorWith4DAttentionMask(
         # [LlamaFactory] args of MultiModalDataCollatorForSeq2Seq
@@ -139,5 +145,14 @@ def main():
 
 
 if __name__ == "__main__":
-    print(f"Is GPU available: {torch.cuda.is_available()}, device name: {torch.cuda.get_device_name(0)}")
+    if torch.cuda.is_available():
+        print(f"Available num of gpus: {torch.cuda.device_count()}")
+        nnodes=os.getenv("NNODES", None),
+        node_rank=os.getenv("NODE_RANK", None),
+        master_addr = os.getenv("MASTER_ADDR", None)  # "127.0.0.1")
+        master_port = os.getenv("MASTER_PORT", None)  # str(random.randint(20001, 29999)))
+        nproc_per_node=os.getenv("NPROC_PER_NODE", None),
+        print(f"Initializing distributed tasks at: {master_addr}:{master_port}")
+        print(f"Num nodes: {nnodes}, Node rank: {node_rank}, Num proc per node: {nproc_per_node}")
+
     main()

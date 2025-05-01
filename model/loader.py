@@ -27,6 +27,7 @@ def load_tokenizer(args: ModelArguments):
     config = load_config(args)
     _set_extra_attr(config, processor, tokenizer, args)
 
+    print(f"Loaded tokenizer and processor.")
     return tokenizer, processor
 
 
@@ -35,7 +36,12 @@ def load_model(model_args: ModelArguments, finetuning_args: FinetuningArguments,
     init_kwargs = _get_init_kwargs(model_args)
     init_kwargs["config"] = config
     init_kwargs["pretrained_model_name_or_path"] = model_args.model_name_or_path
+
+    print(f"Start loading model...")
+
     model = AutoModelForVision2Seq.from_pretrained(**init_kwargs)
+
+    print(f"Model is loaded.")
 
     if model_args.gradient_checkpointing:
         apply_custom_checkpointing(model)
