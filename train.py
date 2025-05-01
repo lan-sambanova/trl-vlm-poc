@@ -1,4 +1,5 @@
 import os
+import math
 import torch
 from transformers import TrainingArguments
 from trl import SFTConfig, SFTTrainer
@@ -37,7 +38,7 @@ def main():
         cutoff_len=1024,
         overwrite_cache=True,
         preprocessing_num_workers=4,
-        # max_samples = 8,
+        max_samples = 100,
     )
     model_args = ModelArguments(
         model_name_or_path="/import/ml-sc-scratch3/shubhangiu/llama_3.2_checkpoints/saves/llama-3.2-11b_llava_med_pretraining/full/sft/checkpoint-3651",
@@ -71,10 +72,6 @@ def main():
         plot_loss=True,
     )
 
-    print(f"Distributed mode: {training_args.parallel_mode}")
-    print(f"Local rank: {training_args.local_rank}")
-    print(f"Distributed state: {training_args.distributed_state}")
-
     tokenizer, processor = load_tokenizer(model_args)
 
     template = get_template(tokenizer, data_args)
@@ -88,6 +85,18 @@ def main():
         )
     with training_args.main_process_first(desc="loading model"):
         model = load_model(model_args, finetuning_args, training_args.do_train)
+
+    # Calculate batch sizes
+    world_size = int(os.environ.get("WORLD_SIZE", 1))
+    per_device_train_batch_size = training_args.per_device_train_batch_size
+    effective_train_batch_size = per_device_train_batch_size * training_args.gradient_accumulation_steps * world_size
+    num_training_steps = math.ceil(len(dataset) / effective_train_batch_size) * training_args.num_train_epochs
+
+    if training_args.local_rank in [-1, 0]:
+        print(f"Per device train batch size: {per_device_train_batch_size}")
+        print(f"Effective global train batch size: {effective_train_batch_size}")
+        print(f"Num of train steps: {num_training_steps}")
+
 
     data_collator = SFTDataCollatorWith4DAttentionMask(
         # [LlamaFactory] args of MultiModalDataCollatorForSeq2Seq
