@@ -10,5 +10,5 @@ export NNODES=1
 export NODE_RANK=0
 export NPROC_PER_NODE=2
 
-torchrun --nnodes=$NNODES --node_rank=$NODE_RANK --nproc_per_node=$NPROC_PER_NODE train.py > /import/ml-sc-scratch6/lang/trl-vlm-poc/train_output.log 2>&1
+torchrun --nnodes=$NNODES --node_rank=$NODE_RANK --nproc_per_node=$NPROC_PER_NODE train.py > /import/ml-sc-scratch6/lang/llama_3.2_checkpoints_gpu_trl/train_output.log 2>&1
 # python -m pdb train.py

@@ -37,7 +37,7 @@ def main():
         cutoff_len=1024,
         overwrite_cache=True,
         preprocessing_num_workers=4,
-        max_samples = 8,
+        # max_samples = 8,
     )
     model_args = ModelArguments(
         model_name_or_path="/import/ml-sc-scratch3/shubhangiu/llama_3.2_checkpoints/saves/llama-3.2-11b_llava_med_pretraining/full/sft/checkpoint-3651",
