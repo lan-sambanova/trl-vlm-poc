@@ -38,7 +38,7 @@ def main():
         cutoff_len=1024,
         overwrite_cache=True,
         preprocessing_num_workers=4,
-        max_samples = 100,
+        max_samples = 128,
     )
     model_args = ModelArguments(
         model_name_or_path="/import/ml-sc-scratch3/shubhangiu/llama_3.2_checkpoints/saves/llama-3.2-11b_llava_med_pretraining/full/sft/checkpoint-3651",
@@ -93,6 +93,7 @@ def main():
     num_training_steps = math.ceil(len(dataset) / effective_train_batch_size) * training_args.num_train_epochs
 
     if training_args.local_rank in [-1, 0]:
+        print(f"World size: {world_size}")
         print(f"Per device train batch size: {per_device_train_batch_size}")
         print(f"Effective global train batch size: {effective_train_batch_size}")
         print(f"Num of train steps: {num_training_steps}")
