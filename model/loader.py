@@ -1,8 +1,10 @@
 from dataclasses import dataclass
 
-from transformers import AutoConfig, AutoTokenizer, AutoProcessor, AutoModelForVision2Seq
+import torch
+from transformers import AutoConfig, AutoTokenizer, AutoProcessor, AutoModelForVision2Seq, TrainingArguments
 
 from params import ModelArguments, FinetuningArguments
+from utils import get_current_device
 
 from llamafactory_refs.model_utils import count_parameters, _set_extra_attr, _get_init_kwargs, apply_custom_checkpointing
 from llamafactory_refs.adapter import init_adapter
@@ -31,11 +33,19 @@ def load_tokenizer(args: ModelArguments):
     return tokenizer, processor
 
 
-def load_model(model_args: ModelArguments, finetuning_args: FinetuningArguments, is_trainable: bool):
+def load_model(model_args: ModelArguments, finetuning_args: FinetuningArguments, training_args: TrainingArguments):
     config = load_config(model_args)
     init_kwargs = _get_init_kwargs(model_args)
+    is_trainable = training_args.do_train
+
+    # patch init kwargs for model loading
     init_kwargs["config"] = config
     init_kwargs["pretrained_model_name_or_path"] = model_args.model_name_or_path
+    if training_args.bf16:
+        init_kwargs["torch_dtype"] = torch.bfloat16
+    elif training_args.fp16:
+        init_kwargs["torch_dtype"] = torch.float16
+    init_kwargs["device_map"] = {"": get_current_device()}
 
     print(f"Start loading model...")
 

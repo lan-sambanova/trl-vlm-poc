@@ -35,7 +35,7 @@ class ModelArguments:
     video_maxlen: int = 64
     gradient_checkpointing: bool = True
     block_diag_attn: bool = False  # whether use block diag attn or not
-    compute_dtype: Optional[torch.dtype] = None  # Torch dtype for computing model outputs, derived from `fp/bf16`. Do not specify it.
+    compute_dtype: Optional[torch.dtype] = None  # Torch dtype for computing model outputs, derived from training args. Do not specify it.
 
 # Ref: src/llamafactory/hparams/finetuning_args.py
 @dataclass

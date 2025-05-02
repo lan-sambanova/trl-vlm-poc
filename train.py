@@ -83,8 +83,8 @@ def main():
         dataset = get_preprocessed_dataset(
             dataset, data_args, training_args, template, tokenizer, processor, is_eval=False,
         )
-    with training_args.main_process_first(desc="loading model"):
-        model = load_model(model_args, finetuning_args, training_args.do_train)
+
+    model = load_model(model_args, finetuning_args, training_args)
 
     # Calculate batch sizes
     world_size = int(os.environ.get("WORLD_SIZE", 1))

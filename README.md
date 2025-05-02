@@ -28,11 +28,11 @@ Output directory: `/import/ml-sc-scratch6/lang/llama_3.2_checkpoints_gpu_trl`
 
 ## Epoch=1, 128 Examples, Frozen Layers, 2 GPUs
 ```
-	"total_flos": 2039011967238144.0,
-    "train_loss": 1.202778160572052,
-    "train_runtime": 106.4038,
-    "train_samples_per_second": 1.203,
-    "train_steps_per_second": 0.019
+   "total_flos": 2039011967238144.0,
+    "train_loss": 1.2031240463256836,
+    "train_runtime": 78.2295,
+    "train_samples_per_second": 1.636,
+    "train_steps_per_second": 0.026
 ```
 
 128 examples distributed across 2 GPUs:
