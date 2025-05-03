@@ -47,8 +47,6 @@ def load_model(model_args: ModelArguments, finetuning_args: FinetuningArguments,
         init_kwargs["torch_dtype"] = torch.float16
     init_kwargs["device_map"] = {"": get_current_device()}
 
-    print(f"Start loading model...")
-
     model = AutoModelForVision2Seq.from_pretrained(**init_kwargs)
 
     print(f"Model is loaded.")
